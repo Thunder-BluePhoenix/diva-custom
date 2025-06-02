@@ -4,4 +4,4 @@ This app is for a saloon
 
 #### License
 
-mit
+mit# diva-custom
