@@ -45,9 +45,16 @@ fixtures = [
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
+app_include_js = [
+    "assets/diva_custom/js/point_of_sale_custombnm.js"
+]
 
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
+# page_js = {
+#     "point-of-sale": "public/js/point_of_sale_custom.js"
+# }
+
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
@@ -151,6 +158,12 @@ fixtures = [
 # 		"on_trash": "method"
 # 	}
 # }
+
+doc_events = {
+    "Sales Person": {"before_save":"diva_custom.overrides.sales_person.validate_sales_persons_commission"},
+    "POS Invoice":{"before_insert":"diva_custom.overrides.pos_invoice.fetch_user_details",
+                   "on_update":"diva_custom.overrides.pos_invoice.update_pos_commission"}
+}
 
 # Scheduled Tasks
 # ---------------
