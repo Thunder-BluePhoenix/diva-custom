@@ -46,18 +46,19 @@ fixtures = [
 # webform_include_js = {"doctype": "public/js/doctype.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 app_include_js = [
-    "assets/diva_custom/js/point_of_sale_custombnm.js"
+    "assets/diva_custom/js/point_of_sale_customta.js",
+    "assets/diva_custom/js/pos_integrationn.js"
 ]
 
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
 # page_js = {
-#     "point-of-sale": "public/js/point_of_sale_custom.js"
+#     "point-of-sale": "public/js/point_of_sale_custom.js"arif
 # }
 
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"POS Invoice" : "public/js/pos_invoice.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -162,7 +163,10 @@ app_include_js = [
 doc_events = {
     "Sales Person": {"before_save":"diva_custom.overrides.sales_person.validate_sales_persons_commission"},
     "POS Invoice":{"before_insert":"diva_custom.overrides.pos_invoice.fetch_user_details",
-                   "on_update":"diva_custom.overrides.pos_invoice.update_pos_commission"}
+                   "on_update":"diva_custom.overrides.pos_invoice.update_pos_commission",
+                   "before_save": "diva_custom.overrides.pos_invoice.update_pos_commission",
+                    "before_submit": "diva_custom.overrides.pos_invoice.update_pos_commission"
+}
 }
 
 # Scheduled Tasks

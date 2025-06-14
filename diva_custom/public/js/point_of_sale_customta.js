@@ -1,4 +1,5 @@
-// console.log("Diva Custom POS script loaded");
+// Fixed POS customization with working discount and single sales person selector
+console.log("Diva Custom POS script loaded - Fixed Version");
 
 $(document).ready(function() {
     console.log("Document ready - setting up POS customization");
@@ -14,8 +15,8 @@ $(document).ready(function() {
     
     // Monitor window resize for responsive positioning
     $(window).on('resize', function() {
-        if (window.location.href.includes('point-of-sale') && $('.diva-pos-user').length > 0) {
-            repositionUserName();
+        if (window.location.href.includes('point-of-sale') && $('.diva-pos-user, .diva-sales-person').length > 0) {
+            repositionCustomElements();
         }
     });
     
@@ -27,9 +28,14 @@ $(document).ready(function() {
 
 function handleRouteChange() {
     if (window.location.href.includes('point-of-sale')) {
-        // We're on POS page - add user name if not already there
+        // We're on POS page - add custom elements if not already there
         if ($('.diva-pos-user').length === 0) {
             addUserNameToPOS();
+        }
+        
+        // Prevent multiple sales person selectors
+        if ($('.diva-sales-person').length === 0) {
+            addSalesPersonSelector();
         }
         
         // Initialize discount logic if not already initialized
@@ -40,13 +46,14 @@ function handleRouteChange() {
             }, 2000);
         }
     } else {
-        // We're NOT on POS page - remove user name and reset discount logic
-        removeUserNameFromPOS();
+        // We're NOT on POS page - remove custom elements and reset
+        removeCustomElementsFromPOS();
         window.divaDiscountInitialized = false;
+        window.selectedSalesPerson = null;
     }
 }
 
-
+// ===== USER NAME FUNCTIONS =====
 function addUserNameToPOS() {
     console.log("Adding user name to POS page");
     
@@ -147,20 +154,6 @@ function positionUserNameResponsively(fullscreenBtn, menuBtnGroup) {
     }
 }
 
-function repositionUserName() {
-    console.log("Repositioning user name due to window resize");
-    
-    // Remove existing user name
-    $('.diva-pos-user').remove();
-    
-    // Add it again with correct positioning
-    setTimeout(function() {
-        let fullscreenBtn = $('.fullscreen-btn').first();
-        let menuBtnGroup = $('.menu-btn-group').first();
-        positionUserNameResponsively(fullscreenBtn, menuBtnGroup);
-    }, 100);
-}
-
 function addUserNameFallback() {
     // Fallback position if target elements not found
     try {
@@ -195,17 +188,376 @@ function addUserNameFallback() {
     }
 }
 
-function removeUserNameFromPOS() {
-    if ($('.diva-pos-user').length > 0) {
-        console.log("Removing user name - not on POS page");
-        $('.diva-pos-user').fadeOut(300, function() {
+// ===== SALES PERSON SELECTOR FUNCTIONS =====
+function addSalesPersonSelector() {
+    console.log("Adding sales person selector to POS page");
+    
+    // IMPORTANT: Check if already exists to prevent duplicates
+    if ($('.diva-sales-person').length > 0) {
+        console.log("Sales person selector already exists, skipping");
+        return;
+    }
+    
+    let attempts = 0;
+    let maxAttempts = 15;
+    
+    let findElementsInterval = setInterval(function() {
+        attempts++;
+        console.log("Looking for POS elements for sales person, attempt:", attempts);
+        
+        // Look for customer section or appropriate container
+        let customerSection = $('.customer-section, .pos-customer-details, .customer-details').first();
+        let posContainer = $('.pos-profile-section, .pos-container').first();
+        
+        if (customerSection.length > 0 || posContainer.length > 0) {
+            console.log("Found suitable container for sales person selector");
+            clearInterval(findElementsInterval);
+            createSalesPersonSelector(customerSection.length > 0 ? customerSection : posContainer);
+        } else if (attempts >= maxAttempts) {
+            console.log("Container not found, using fallback position");
+            clearInterval(findElementsInterval);
+            createSalesPersonSelectorFallback();
+        }
+    }, 500);
+}
+
+function createSalesPersonSelector(container) {
+    console.log("Creating sales person selector");
+    
+    // Double-check to prevent duplicates
+    if ($('.diva-sales-person').length > 0) {
+        console.log("Sales person selector already exists, removing old one");
+        $('.diva-sales-person').remove();
+    }
+    
+    // Create the sales person selector element
+    let salesPersonSelector = $(`
+        <div class="diva-sales-person" style="
+            background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        ">
+            <div style="
+                color: white;
+                font-weight: 600;
+                font-size: 13px;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+            ">
+                <i class="fa fa-user-tie" style="margin-right: 8px; font-size: 14px;"></i>
+                Sales Person
+            </div>
+            <div class="sales-person-input-wrapper" style="position: relative;">
+                <input type="text" 
+                       class="form-control sales-person-input" 
+                       placeholder="Select Sales Person..." 
+                       style="
+                           background: rgba(255,255,255,0.95);
+                           border: 1px solid rgba(255,255,255,0.3);
+                           border-radius: 4px;
+                           padding: 8px 12px;
+                           font-size: 12px;
+                           color: #333;
+                       "
+                       readonly>
+                <div class="sales-person-dropdown" style="
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    z-index: 1000;
+                    display: none;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                "></div>
+            </div>
+        </div>
+    `);
+    
+    // Insert after the container or at the beginning
+    if (container.hasClass('customer-section') || container.hasClass('pos-customer-details')) {
+        container.after(salesPersonSelector);
+    } else {
+        container.prepend(salesPersonSelector);
+    }
+    
+    // Initialize the sales person functionality
+    initializeSalesPersonSelector();
+}
+
+function createSalesPersonSelectorFallback() {
+    console.log("Creating sales person selector in fallback position");
+    
+    // Double-check to prevent duplicates
+    if ($('.diva-sales-person').length > 0) {
+        console.log("Sales person selector already exists, removing old one");
+        $('.diva-sales-person').remove();
+    }
+    
+    let salesPersonSelector = $(`
+        <div class="diva-sales-person" style="
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 250px;
+            background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1050;
+            border: 1px solid rgba(255,255,255,0.2);
+        ">
+            <div style="
+                color: white;
+                font-weight: 600;
+                font-size: 13px;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+            ">
+                <i class="fa fa-user-tie" style="margin-right: 8px; font-size: 14px;"></i>
+                Sales Person
+            </div>
+            <div class="sales-person-input-wrapper" style="position: relative;">
+                <input type="text" 
+                       class="form-control sales-person-input" 
+                       placeholder="Select Sales Person..." 
+                       style="
+                           background: rgba(255,255,255,0.95);
+                           border: 1px solid rgba(255,255,255,0.3);
+                           border-radius: 4px;
+                           padding: 8px 12px;
+                           font-size: 12px;
+                           color: #333;
+                           width: 100%;
+                       "
+                       readonly>
+                <div class="sales-person-dropdown" style="
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    z-index: 1000;
+                    display: none;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                "></div>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(salesPersonSelector);
+    initializeSalesPersonSelector();
+}
+
+function initializeSalesPersonSelector() {
+    console.log("Initializing sales person selector");
+    
+    let salesPersonInput = $('.sales-person-input');
+    let dropdown = $('.sales-person-dropdown');
+    
+    // Remove any existing event handlers to prevent duplicates
+    salesPersonInput.off('click.salesPerson');
+    $(document).off('click.salesPersonDropdown');
+    
+    // Load sales persons on click
+    salesPersonInput.on('click.salesPerson', function() {
+        console.log("Sales person input clicked");
+        loadSalesPersons();
+    });
+    
+    // Close dropdown when clicking outside
+    $(document).on('click.salesPersonDropdown', function(e) {
+        if (!$(e.target).closest('.sales-person-input-wrapper').length) {
+            dropdown.hide();
+        }
+    });
+}
+
+function loadSalesPersons() {
+    console.log("Loading sales persons");
+    
+    let dropdown = $('.sales-person-dropdown');
+    
+    // Show loading
+    dropdown.html('<div style="padding: 10px; text-align: center; color: #666;">Loading...</div>').show();
+    
+    // Fetch sales persons from Frappe
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'Sales Person',
+            fields: ['name', 'sales_person_name', 'enabled'],
+            filters: {
+                'enabled': 1,
+                'is_group': 0  // Only individual sales persons, not groups
+            },
+            order_by: 'sales_person_name asc'
+        },
+        callback: function(response) {
+            if (response.message && response.message.length > 0) {
+                console.log("Sales persons loaded:", response.message);
+                populateSalesPersonDropdown(response.message);
+            } else {
+                console.log("No sales persons found");
+                dropdown.html('<div style="padding: 10px; text-align: center; color: #666;">No sales persons found</div>');
+            }
+        },
+        error: function(error) {
+            console.error("Error loading sales persons:", error);
+            dropdown.html('<div style="padding: 10px; text-align: center; color: #dc3545;">Error loading sales persons</div>');
+        }
+    });
+}
+
+function populateSalesPersonDropdown(salesPersons) {
+    console.log("Populating sales person dropdown");
+    
+    let dropdown = $('.sales-person-dropdown');
+    let dropdownHtml = '';
+    
+    // Add "Clear Selection" option
+    dropdownHtml += `
+        <div class="sales-person-option" data-name="" data-display="" style="
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            color: #dc3545;
+            font-style: italic;
+        ">
+            <i class="fa fa-times" style="margin-right: 6px;"></i>
+            Clear Selection
+        </div>
+    `;
+    
+    // Add sales persons
+    salesPersons.forEach(function(salesPerson) {
+        let displayName = salesPerson.sales_person_name || salesPerson.name;
+        dropdownHtml += `
+            <div class="sales-person-option" data-name="${salesPerson.name}" data-display="${displayName}" style="
+                padding: 8px 12px;
+                cursor: pointer;
+                border-bottom: 1px solid #eee;
+                transition: background-color 0.2s;
+            ">
+                <i class="fa fa-user" style="margin-right: 6px; color: #007bff;"></i>
+                ${displayName}
+            </div>
+        `;
+    });
+    
+    dropdown.html(dropdownHtml);
+    
+    // Remove existing event handlers to prevent duplicates
+    $('.sales-person-option').off('hover click');
+    
+    // Add hover effects and click handlers
+    $('.sales-person-option').hover(
+        function() {
+            $(this).css('background-color', '#f8f9fa');
+        },
+        function() {
+            $(this).css('background-color', 'white');
+        }
+    ).on('click', function() {
+        let selectedName = $(this).data('name');
+        let selectedDisplayName = $(this).data('display');
+        
+        console.log("Sales person selected:", selectedName, selectedDisplayName);
+        
+        // Update input field
+        let salesPersonInput = $('.sales-person-input');
+        if (selectedName) {
+            salesPersonInput.val(selectedDisplayName);
+            
+            // Use the new integration function to set sales person
+            if (typeof window.setSalesPersonForPOS === 'function') {
+                window.setSalesPersonForPOS(selectedName, selectedDisplayName);
+            } else {
+                // Fallback to old method
+                window.selectedSalesPerson = selectedName;
+            }
+            
+            // Visual feedback for selection
+            salesPersonInput.css({
+                'background-color': '#e8f5e8',
+                'border-color': '#28a745'
+            });
+            
+            setTimeout(() => {
+                salesPersonInput.css({
+                    'background-color': 'rgba(255,255,255,0.95)',
+                    'border-color': 'rgba(255,255,255,0.3)'
+                });
+            }, 2000);
+            
+        } else {
+            salesPersonInput.val('');
+            
+            // Use the new integration function to clear sales person
+            if (typeof window.clearSalesPersonForPOS === 'function') {
+                window.clearSalesPersonForPOS();
+            } else {
+                // Fallback to old method
+                window.selectedSalesPerson = null;
+            }
+            
+            // Visual feedback for clearing
+            salesPersonInput.css({
+                'background-color': '#fff3cd',
+                'border-color': '#ffc107'
+            });
+            
+            setTimeout(() => {
+                salesPersonInput.css({
+                    'background-color': 'rgba(255,255,255,0.95)',
+                    'border-color': 'rgba(255,255,255,0.3)'
+                });
+            }, 2000);
+        }
+        
+        // Hide dropdown
+        dropdown.hide();
+    });
+}
+
+function repositionCustomElements() {
+    console.log("Repositioning custom elements due to window resize");
+    
+    // Remove existing elements
+    $('.diva-pos-user, .diva-sales-person').remove();
+    
+    // Add them again with correct positioning
+    setTimeout(function() {
+        if (window.location.href.includes('point-of-sale')) {
+            addUserNameToPOS();
+            addSalesPersonSelector();
+        }
+    }, 100);
+}
+
+function removeCustomElementsFromPOS() {
+    if ($('.diva-pos-user, .diva-sales-person').length > 0) {
+        console.log("Removing custom elements - not on POS page");
+        $('.diva-pos-user, .diva-sales-person').fadeOut(300, function() {
             $(this).remove();
         });
     }
 }
 
-
-// ===== DISCOUNT FUNCTIONS =====
+// ===== DISCOUNT FUNCTIONS (RESTORED ORIGINAL FUNCTIONALITY) =====
 function initializePOSDiscountLogic() {
     console.log("Initializing POS discount logic");
     
@@ -213,11 +565,11 @@ function initializePOSDiscountLogic() {
     let customerInputSelector = 'input[data-target="Customer"], input[placeholder*="customer"], input[placeholder*="Customer"]';
     
     // Remove any existing event handlers to prevent duplicates
-    $(document).off('input change blur', customerInputSelector);
-    $(document).off('awesomplete-selectcomplete', customerInputSelector);
+    $(document).off('input.discount change.discount blur.discount', customerInputSelector);
+    $(document).off('awesomplete-selectcomplete.discount', customerInputSelector);
     
     // Use event delegation to handle dynamically loaded elements
-    $(document).on('input change blur', customerInputSelector, function() {
+    $(document).on('input.discount change.discount blur.discount', customerInputSelector, function() {
         let customerInput = $(this);
         let customerValue = customerInput.val();
         
@@ -237,7 +589,7 @@ function initializePOSDiscountLogic() {
     });
     
     // Also monitor for awesomplete selection (dropdown selection)
-    $(document).on('awesomplete-selectcomplete', customerInputSelector, function() {
+    $(document).on('awesomplete-selectcomplete.discount', customerInputSelector, function() {
         let customerValue = $(this).val();
         console.log("Customer selected via dropdown:", customerValue);
         
@@ -383,7 +735,7 @@ function applyDiscount(discountRate) {
         // Direct percentage application
         console.log("Applying percentage discount:", discountValue);
         setDiscountPercentage(discountValue);
-    } else if (discountType === 'Flat Amount') {
+    } else if (discountType === 'Flat Amount/Each Item') {
         // Calculate percentage based on net total
         console.log("Calculating percentage from flat amount:", discountValue);
         calculatePercentageFromFlatAmount(discountValue);
@@ -646,3 +998,4 @@ function clearDiscount() {
         console.log("No active discount found to clear");
     }
 }
+
