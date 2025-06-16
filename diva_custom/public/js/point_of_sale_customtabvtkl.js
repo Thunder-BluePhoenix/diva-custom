@@ -221,8 +221,10 @@ function addSalesPersonSelector() {
     }, 500);
 }
 
+window.allSalesPersonsData = [];
+
 function createSalesPersonSelector(container) {
-    console.log("Creating sales person selector");
+    console.log("Creating sales person selector with search");
     
     // Double-check to prevent duplicates
     if ($('.diva-sales-person').length > 0) {
@@ -230,7 +232,7 @@ function createSalesPersonSelector(container) {
         $('.diva-sales-person').remove();
     }
     
-    // Create the sales person selector element
+    // Create the sales person selector element with search
     let salesPersonSelector = $(`
         <div class="diva-sales-person" style="
             background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
@@ -247,14 +249,39 @@ function createSalesPersonSelector(container) {
                 margin-bottom: 8px;
                 display: flex;
                 align-items: center;
+                justify-content: space-between;
             ">
-                <i class="fa fa-user-tie" style="margin-right: 8px; font-size: 14px;"></i>
-                Sales Person
+                <span>
+                    <i class="fa fa-user-tie" style="margin-right: 8px; font-size: 14px;"></i>
+                    Sales Person
+                </span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-sm sales-person-refresh" style="
+                        background: rgba(255,255,255,0.2);
+                        border: 1px solid rgba(255,255,255,0.3);
+                        color: white;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                    " title="Refresh Sales Persons">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                    <button class="btn btn-sm sales-person-clear" style="
+                        background: rgba(255,255,255,0.2);
+                        border: 1px solid rgba(255,255,255,0.3);
+                        color: white;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                    " title="Clear Selection">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
             </div>
             <div class="sales-person-input-wrapper" style="position: relative;">
                 <input type="text" 
                        class="form-control sales-person-input" 
-                       placeholder="Select Sales Person..." 
+                       placeholder="Search and select sales person..." 
                        style="
                            background: rgba(255,255,255,0.95);
                            border: 1px solid rgba(255,255,255,0.3);
@@ -262,8 +289,7 @@ function createSalesPersonSelector(container) {
                            padding: 8px 12px;
                            font-size: 12px;
                            color: #333;
-                       "
-                       readonly>
+                       ">
                 <div class="sales-person-dropdown" style="
                     position: absolute;
                     top: 100%;
@@ -272,7 +298,7 @@ function createSalesPersonSelector(container) {
                     background: white;
                     border: 1px solid #ddd;
                     border-radius: 4px;
-                    max-height: 200px;
+                    max-height: 250px;
                     overflow-y: auto;
                     z-index: 1000;
                     display: none;
@@ -289,12 +315,12 @@ function createSalesPersonSelector(container) {
         container.prepend(salesPersonSelector);
     }
     
-    // Initialize the sales person functionality
-    initializeSalesPersonSelector();
+    // Initialize the sales person functionality with search
+    initializeSalesPersonSelectorWithSearch();
 }
 
 function createSalesPersonSelectorFallback() {
-    console.log("Creating sales person selector in fallback position");
+    console.log("Creating sales person selector in fallback position with search");
     
     // Double-check to prevent duplicates
     if ($('.diva-sales-person').length > 0) {
@@ -307,7 +333,7 @@ function createSalesPersonSelectorFallback() {
             position: fixed;
             top: 80px;
             left: 20px;
-            width: 250px;
+            width: 280px;
             background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
             border-radius: 8px;
             padding: 12px;
@@ -322,14 +348,39 @@ function createSalesPersonSelectorFallback() {
                 margin-bottom: 8px;
                 display: flex;
                 align-items: center;
+                justify-content: space-between;
             ">
-                <i class="fa fa-user-tie" style="margin-right: 8px; font-size: 14px;"></i>
-                Sales Person
+                <span>
+                    <i class="fa fa-user-tie" style="margin-right: 8px; font-size: 14px;"></i>
+                    Sales Person
+                </span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-sm sales-person-refresh" style="
+                        background: rgba(255,255,255,0.2);
+                        border: 1px solid rgba(255,255,255,0.3);
+                        color: white;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                    " title="Refresh Sales Persons">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                    <button class="btn btn-sm sales-person-clear" style="
+                        background: rgba(255,255,255,0.2);
+                        border: 1px solid rgba(255,255,255,0.3);
+                        color: white;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                    " title="Clear Selection">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
             </div>
             <div class="sales-person-input-wrapper" style="position: relative;">
                 <input type="text" 
                        class="form-control sales-person-input" 
-                       placeholder="Select Sales Person..." 
+                       placeholder="Search and select sales person..." 
                        style="
                            background: rgba(255,255,255,0.95);
                            border: 1px solid rgba(255,255,255,0.3);
@@ -338,8 +389,7 @@ function createSalesPersonSelectorFallback() {
                            font-size: 12px;
                            color: #333;
                            width: 100%;
-                       "
-                       readonly>
+                       ">
                 <div class="sales-person-dropdown" style="
                     position: absolute;
                     top: 100%;
@@ -348,7 +398,7 @@ function createSalesPersonSelectorFallback() {
                     background: white;
                     border: 1px solid #ddd;
                     border-radius: 4px;
-                    max-height: 200px;
+                    max-height: 250px;
                     overflow-y: auto;
                     z-index: 1000;
                     display: none;
@@ -359,23 +409,42 @@ function createSalesPersonSelectorFallback() {
     `);
     
     $('body').append(salesPersonSelector);
-    initializeSalesPersonSelector();
+    initializeSalesPersonSelectorWithSearch();
 }
 
-function initializeSalesPersonSelector() {
-    console.log("Initializing sales person selector");
+
+function initializeSalesPersonSelectorWithSearch() {
+    console.log("Initializing sales person selector with search functionality");
     
     let salesPersonInput = $('.sales-person-input');
     let dropdown = $('.sales-person-dropdown');
     
     // Remove any existing event handlers to prevent duplicates
-    salesPersonInput.off('click.salesPerson');
+    salesPersonInput.off('click.salesPerson input.salesPerson keyup.salesPerson focus.salesPerson');
     $(document).off('click.salesPersonDropdown');
+    $('.sales-person-refresh, .sales-person-clear').off('click');
     
-    // Load sales persons on click
-    salesPersonInput.on('click.salesPerson', function() {
-        console.log("Sales person input clicked");
-        loadSalesPersons();
+    // Load sales persons on click or focus
+    salesPersonInput.on('click.salesPerson focus.salesPerson', function() {
+        console.log("Sales person input clicked/focused");
+        if (window.allSalesPersonsData.length === 0) {
+            loadSalesPersons();
+        } else {
+            showAllSalesPersons();
+        }
+    });
+    
+    // Search functionality - trigger on input and keyup
+    salesPersonInput.on('input.salesPerson keyup.salesPerson', function() {
+        let searchTerm = $(this).val().toLowerCase().trim();
+        console.log("Searching for:", searchTerm);
+        
+        if (window.allSalesPersonsData.length > 0) {
+            filterSalesPersons(searchTerm);
+        } else {
+            // Load data first, then filter
+            loadSalesPersons(searchTerm);
+        }
     });
     
     // Close dropdown when clicking outside
@@ -384,32 +453,55 @@ function initializeSalesPersonSelector() {
             dropdown.hide();
         }
     });
+    
+    // Refresh button
+    $('.sales-person-refresh').on('click', function() {
+        console.log("Refreshing sales persons");
+        window.allSalesPersonsData = []; // Clear cache
+        salesPersonInput.val(''); // Clear search
+        loadSalesPersons();
+    });
+    
+    // Clear button
+    $('.sales-person-clear').on('click', function() {
+        console.log("Clearing sales person selection");
+        salesPersonInput.val('');
+        clearSalesPersonSelection();
+        dropdown.hide();
+    });
 }
 
-function loadSalesPersons() {
-    console.log("Loading sales persons");
+function loadSalesPersons(searchTerm = '') {
+    console.log("Loading sales persons from API");
     
     let dropdown = $('.sales-person-dropdown');
     
     // Show loading
-    dropdown.html('<div style="padding: 10px; text-align: center; color: #666;">Loading...</div>').show();
+    dropdown.html('<div style="padding: 10px; text-align: center; color: #666;"><i class="fa fa-spinner fa-spin"></i> Loading sales persons...</div>').show();
     
-    // Fetch sales persons from Frappe
+    // Use your existing API call
     frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'Sales Person',
-            fields: ['name', 'sales_person_name', 'enabled'],
-            filters: {
-                'enabled': 1,
-                'is_group': 0  // Only individual sales persons, not groups
-            },
-            order_by: 'sales_person_name asc'
-        },
+        method: 'diva_custom.overrides.sales_person.get_sales_persons',
         callback: function(response) {
             if (response.message && response.message.length > 0) {
-                console.log("Sales persons loaded:", response.message);
-                populateSalesPersonDropdown(response.message);
+                console.log("Sales persons loaded:", response.message.length);
+                
+                // Store all sales persons for search
+                window.allSalesPersonsData = response.message;
+                
+                // Show filtered or all results
+                if (searchTerm) {
+                    filterSalesPersons(searchTerm);
+                } else {
+                    showAllSalesPersons();
+                }
+                
+                // Show success message
+                frappe.show_alert({
+                    message: `Loaded ${response.message.length} sales persons`,
+                    indicator: 'green'
+                });
+                
             } else {
                 console.log("No sales persons found");
                 dropdown.html('<div style="padding: 10px; text-align: center; color: #666;">No sales persons found</div>');
@@ -422,11 +514,55 @@ function loadSalesPersons() {
     });
 }
 
-function populateSalesPersonDropdown(salesPersons) {
-    console.log("Populating sales person dropdown");
+function showAllSalesPersons() {
+    console.log("Showing all sales persons");
+    populateSalesPersonDropdown(window.allSalesPersonsData);
+}
+
+function filterSalesPersons(searchTerm) {
+    if (!searchTerm || searchTerm === '') {
+        // Show all if no search term
+        showAllSalesPersons();
+        return;
+    }
+    
+    console.log("Filtering sales persons for:", searchTerm);
+    
+    // Filter based on name or sales_person_name
+    let filteredResults = window.allSalesPersonsData.filter(sp => {
+        let name = (sp.sales_person_name || '').toLowerCase();
+        let code = (sp.name || '').toLowerCase();
+        return name.includes(searchTerm) || code.includes(searchTerm);
+    });
+    
+    console.log("Found", filteredResults.length, "matching sales persons");
+    
+    // Show filtered results
+    populateSalesPersonDropdown(filteredResults, searchTerm);
+}
+
+
+function populateSalesPersonDropdown(salesPersons, searchTerm = '') {
+    console.log("Populating dropdown with", salesPersons.length, "sales persons");
     
     let dropdown = $('.sales-person-dropdown');
     let dropdownHtml = '';
+    
+    // Add search info header
+    if (searchTerm) {
+        dropdownHtml += `
+            <div style="padding: 6px 12px; background: #e3f2fd; border-bottom: 1px solid #dee2e6; font-size: 11px; color: #1976d2;">
+                <i class="fa fa-search" style="margin-right: 4px;"></i>
+                Search: "${searchTerm}" (${salesPersons.length} found)
+            </div>
+        `;
+    } else {
+        dropdownHtml += `
+            <div style="padding: 4px 12px; background: #e9ecef; font-size: 10px; color: #6c757d; border-bottom: 1px solid #dee2e6;">
+                ${salesPersons.length} sales person(s) available - Type to search
+            </div>
+        `;
+    }
     
     // Add "Clear Selection" option
     dropdownHtml += `
@@ -436,29 +572,55 @@ function populateSalesPersonDropdown(salesPersons) {
             border-bottom: 1px solid #eee;
             color: #dc3545;
             font-style: italic;
+            background: #f8f9fa;
         ">
             <i class="fa fa-times" style="margin-right: 6px;"></i>
             Clear Selection
         </div>
     `;
     
-    // Add sales persons
-    salesPersons.forEach(function(salesPerson) {
-        let displayName = salesPerson.sales_person_name || salesPerson.name;
+    // Show message if no results
+    if (salesPersons.length === 0) {
         dropdownHtml += `
-            <div class="sales-person-option" data-name="${salesPerson.name}" data-display="${displayName}" style="
-                padding: 8px 12px;
-                cursor: pointer;
-                border-bottom: 1px solid #eee;
-                transition: background-color 0.2s;
-            ">
-                <i class="fa fa-user" style="margin-right: 6px; color: #007bff;"></i>
-                ${displayName}
+            <div style="padding: 15px; text-align: center; color: #6c757d; font-style: italic;">
+                ${searchTerm ? `No sales persons found matching "${searchTerm}"` : 'No sales persons available'}
+                <br><small>Try different search terms</small>
             </div>
         `;
-    });
+    } else {
+        // Add sales persons
+        salesPersons.forEach(function(salesPerson) {
+            let displayName = salesPerson.sales_person_name || salesPerson.name;
+            
+            // Highlight search term if present
+            let highlightedName = displayName;
+            if (searchTerm && searchTerm.trim() !== '') {
+                let regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                highlightedName = displayName.replace(regex, '<mark style="background: #ffeb3b; padding: 1px; border-radius: 2px;">$1</mark>');
+            }
+            
+            dropdownHtml += `
+                <div class="sales-person-option" data-name="${salesPerson.name}" data-display="${displayName}" style="
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    border-bottom: 1px solid #eee;
+                    transition: background-color 0.2s;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <i class="fa fa-user" style="margin-right: 6px; color: #007bff;"></i>
+                            <strong>${highlightedName}</strong>
+                        </div>
+                        <div style="font-size: 10px; color: #6c757d;">
+                            ${salesPerson.name}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
     
-    dropdown.html(dropdownHtml);
+    dropdown.html(dropdownHtml).show();
     
     // Remove existing event handlers to prevent duplicates
     $('.sales-person-option').off('hover click');
@@ -482,7 +644,7 @@ function populateSalesPersonDropdown(salesPersons) {
         if (selectedName) {
             salesPersonInput.val(selectedDisplayName);
             
-            // Use the new integration function to set sales person
+            // Use the integration function to set sales person
             if (typeof window.setSalesPersonForPOS === 'function') {
                 window.setSalesPersonForPOS(selectedName, selectedDisplayName);
             } else {
@@ -503,35 +665,57 @@ function populateSalesPersonDropdown(salesPersons) {
                 });
             }, 2000);
             
-        } else {
-            salesPersonInput.val('');
-            
-            // Use the new integration function to clear sales person
-            if (typeof window.clearSalesPersonForPOS === 'function') {
-                window.clearSalesPersonForPOS();
-            } else {
-                // Fallback to old method
-                window.selectedSalesPerson = null;
-            }
-            
-            // Visual feedback for clearing
-            salesPersonInput.css({
-                'background-color': '#fff3cd',
-                'border-color': '#ffc107'
+            // Show success message
+            frappe.show_alert({
+                message: `Selected: ${selectedDisplayName}`,
+                indicator: 'green'
             });
             
-            setTimeout(() => {
-                salesPersonInput.css({
-                    'background-color': 'rgba(255,255,255,0.95)',
-                    'border-color': 'rgba(255,255,255,0.3)'
-                });
-            }, 2000);
+        } else {
+            // Clear selection
+            clearSalesPersonSelection();
         }
         
         // Hide dropdown
         dropdown.hide();
     });
+    
+    console.log("Sales person dropdown populated successfully");
 }
+
+function clearSalesPersonSelection() {
+    console.log("Clearing sales person selection");
+    
+    let salesPersonInput = $('.sales-person-input');
+    salesPersonInput.val('');
+    
+    // Use the integration function to clear sales person
+    if (typeof window.clearSalesPersonForPOS === 'function') {
+        window.clearSalesPersonForPOS();
+    } else {
+        // Fallback to old method
+        window.selectedSalesPerson = null;
+    }
+    
+    // Visual feedback for clearing
+    salesPersonInput.css({
+        'background-color': '#fff3cd',
+        'border-color': '#ffc107'
+    });
+    
+    setTimeout(() => {
+        salesPersonInput.css({
+            'background-color': 'rgba(255,255,255,0.95)',
+            'border-color': 'rgba(255,255,255,0.3)'
+        });
+    }, 2000);
+    
+    frappe.show_alert({
+        message: 'Sales person selection cleared',
+        indicator: 'blue'
+    });
+}
+
 
 function repositionCustomElements() {
     console.log("Repositioning custom elements due to window resize");

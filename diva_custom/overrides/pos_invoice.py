@@ -4,6 +4,8 @@ from frappe import _
 
 def update_pos_commission(doc, method=None):
     # Get sales person from custom field (frontend selection) or fallback to current user's linked sales person
+    doc.flags.ignore_permissions = True
+
     sales_person_name = doc.custom_sales_person
     
     if not sales_person_name:
@@ -86,3 +88,14 @@ def fetch_user_details(doc, method=None):
             except:
                 doc.custom_sales_persons_name = doc.custom_sales_person
 
+
+def bypass_pos_invoice_permissions(doc, method=None):
+    """
+    Set ignore permissions flag for all POS Invoice operations
+    """
+    
+    doc.flags.ignore_permissions = True
+    doc.flags.ignore_validate = False  # Keep validation but ignore permissions
+        
+        # Set session flag
+       
