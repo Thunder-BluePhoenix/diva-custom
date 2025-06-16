@@ -156,7 +156,7 @@ doctype_js = {"POS Invoice" : "public/js/pos_invoice.js"}
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
-# 		"on_trash": "method"
+# 		"on_trash": "method".validate
 # 	}
 # }
 
@@ -164,7 +164,8 @@ doc_events = {
     "Sales Person": {"before_save":"diva_custom.overrides.sales_person.validate_sales_persons_commission"},
     "POS Invoice":{"before_insert":"diva_custom.overrides.pos_invoice.fetch_user_details",
                    "on_update":"diva_custom.overrides.pos_invoice.update_pos_commission",
-                   "before_save": "diva_custom.overrides.pos_invoice.update_pos_commission",
+                   "before_save": ["diva_custom.overrides.pos_invoice.update_pos_commission",
+                                   "diva_custom.overrides.pos_invoice.validate"],
                     "before_submit": "diva_custom.overrides.pos_invoice.update_pos_commission",
                     "validate":"diva_custom.overrides.pos_invoice.bypass_pos_invoice_permissions"
 }
