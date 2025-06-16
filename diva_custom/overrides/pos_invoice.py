@@ -99,3 +99,33 @@ def bypass_pos_invoice_permissions(doc, method=None):
         
         # Set session flag
        
+
+
+# import frappe
+# from frappe.contacts.doctype.address.address import get_company_address
+
+# def get_address_for_company(company_name,method=None):
+#     address = get_company_address(company_name)
+#     return address if address else "No address found"
+
+def validate(self,method=None):
+
+    if self.company_address:
+        address = frappe.get_doc("Address", self.company_address)
+        full_address = []
+
+        if address.address_line1:
+            full_address.append(address.address_line1)
+        if address.address_line2:
+            full_address.append(address.address_line2)
+        if address.city:
+            full_address.append(address.city)
+        if address.county:
+            full_address.append(address.county)
+        if address.country:
+            full_address.append(address.country)
+
+        # Join all parts with commas
+        self.custom_company_address_details = ", ".join(full_address)
+    else:
+        self.custom_company_address_details = ""
