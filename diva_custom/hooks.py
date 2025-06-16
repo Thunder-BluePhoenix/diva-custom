@@ -46,7 +46,7 @@ fixtures = [
 # webform_include_js = {"doctype": "public/js/doctype.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 app_include_js = [
-    "assets/diva_custom/js/point_of_sale_customta.js",
+    "assets/diva_custom/js/point_of_sale_customtabvtkl.js",
     "assets/diva_custom/js/pos_integrationn.js"
 ]
 
@@ -165,7 +165,8 @@ doc_events = {
     "POS Invoice":{"before_insert":"diva_custom.overrides.pos_invoice.fetch_user_details",
                    "on_update":"diva_custom.overrides.pos_invoice.update_pos_commission",
                    "before_save": "diva_custom.overrides.pos_invoice.update_pos_commission",
-                    "before_submit": "diva_custom.overrides.pos_invoice.update_pos_commission"
+                    "before_submit": "diva_custom.overrides.pos_invoice.update_pos_commission",
+                    "validate":"diva_custom.overrides.pos_invoice.bypass_pos_invoice_permissions"
 }
 }
 
