@@ -25,7 +25,8 @@ app_license = "mit"
 # ------------------
 fixtures = [
             
-            {"dt": "Translation", "filters": [["name", "in",("n1th59847f"),]]}
+            {"dt": "Translation", "filters": [["name", "in",("n1th59847f"),]]},
+            {"dt": "Role Profile", "filters": [["name", "in",("POS User", "POS Manager"),]]}
 
 
 
