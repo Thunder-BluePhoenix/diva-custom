@@ -1,0 +1,83 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"otq6jrmq5R\",\"type\":\"header\",\"data\":{\"text\":\"<b>Quick Access</b>\",\"col\":12}},{\"id\":\"7FV-zlBnGf\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"IlaRXCVVrv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"id\":\"q4toFTQkjK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"ivm1UyzLwd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"S2PaG1lyL2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Learn Sales Management\",\"col\":3}},{\"id\":\"QD-XBfgVbM\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS\",\"col\":3}}]",
+ "creation": "2025-06-26 01:22:36.084922",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "gantt",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "POS ShortCut",
+ "links": [],
+ "modified": "2025-06-26 01:31:45.172347",
+ "modified_by": "Administrator",
+ "module": "Diva Custom",
+ "name": "POS ShortCut",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  }
+ ],
+ "sequence_id": 33.0,
+ "shortcuts": [
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "{} Available",
+   "label": "Item",
+   "link_to": "Item",
+   "stats_filter": "[[\"Item\",\"disabled\",\"=\",0,false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "format": "{}  To Deliver",
+   "label": "Sales Order",
+   "link_to": "Sales Order",
+   "stats_filter": "[[\"Sales Order\",\"status\",\"in\",[\"To Deliver\",\"To Deliver and Bill\"],false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Sales Analytics",
+   "link_to": "Sales Analytics",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Dashboard",
+   "link_to": "Selling",
+   "type": "Dashboard"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Learn Sales Management",
+   "type": "URL",
+   "url": "https://school.frappe.io/lms/courses/sales-management-course?utm_source=in_app"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "POS",
+   "link_to": "point-of-sale",
+   "type": "Page"
+  }
+ ],
+ "title": "POS ShortCut"
+}
