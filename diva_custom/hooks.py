@@ -47,7 +47,7 @@ fixtures = [
 # webform_include_js = {"doctype": "public/js/doctype.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 app_include_js = [
-    "assets/diva_custom/js/point_of_sale_customtabvtkl.js",
+    "assets/diva_custom/js/point_of_sale_customtabvtklkl.js",
     "assets/diva_custom/js/pos_integrationn.js"
 ]
 

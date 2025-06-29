@@ -41,13 +41,14 @@ function handleRouteChange() {
         // Initialize discount logic if not already initialized
         if (!window.divaDiscountInitialized) {
             setTimeout(() => {
-                initializePOSDiscountLogic();
+                initializePOSDiscountLogic(); // Now monitors customer-details only
                 window.divaDiscountInitialized = true;
             }, 2000);
         }
     } else {
         // We're NOT on POS page - remove custom elements and reset
         removeCustomElementsFromPOS();
+        cleanupCustomerDetailsMonitoring(); // Updated cleanup function
         window.divaDiscountInitialized = false;
         window.selectedSalesPerson = null;
     }
@@ -742,52 +743,226 @@ function removeCustomElementsFromPOS() {
 }
 
 // ===== DISCOUNT FUNCTIONS (RESTORED ORIGINAL FUNCTIONALITY) =====
+// function initializePOSDiscountLogic() {
+//     console.log("Initializing POS discount logic");
+    
+//     // Monitor customer input field for changes
+//     let customerInputSelector = 'input[data-target="Customer"], input[placeholder*="customer"], input[placeholder*="Customer"]';
+    
+//     // Remove any existing event handlers to prevent duplicates
+//     $(document).off('input.discount change.discount blur.discount', customerInputSelector);
+//     $(document).off('awesomplete-selectcomplete.discount', customerInputSelector);
+    
+//     // Use event delegation to handle dynamically loaded elements
+//     $(document).on('input.discount change.discount blur.discount', customerInputSelector, function() {
+//         let customerInput = $(this);
+//         let customerValue = customerInput.val();
+        
+//         console.log("Customer input changed:", customerValue);
+        
+//         if (customerValue && customerValue.trim() !== '') {
+//             // Delay to ensure customer is properly selected
+//             setTimeout(() => {
+//                 handleCustomerSelection(customerValue);
+//             }, 1000);
+//         } else {
+//             // Clear discount if no customer selected
+//             clearDiscount();
+//             // Clear stored discount info
+//             window.currentDiscountInfo = null;
+//         }
+//     });
+    
+//     // Also monitor for awesomplete selection (dropdown selection)
+//     $(document).on('awesomplete-selectcomplete.discount', customerInputSelector, function() {
+//         let customerValue = $(this).val();
+//         console.log("Customer selected via dropdown:", customerValue);
+        
+//         if (customerValue && customerValue.trim() !== '') {
+//             setTimeout(() => {
+//                 handleCustomerSelection(customerValue);
+//             }, 500);
+//         }
+//     });
+    
+//     // Start monitoring net total changes
+//     startNetTotalMonitoring();
+    
+//     console.log("POS discount logic initialized");
+// }
 function initializePOSDiscountLogic() {
-    console.log("Initializing POS discount logic");
+    console.log("Initializing POS discount logic - monitoring customer-details section only");
     
-    // Monitor customer input field for changes
-    let customerInputSelector = 'input[data-target="Customer"], input[placeholder*="customer"], input[placeholder*="Customer"]';
-    
-    // Remove any existing event handlers to prevent duplicates
-    $(document).off('input.discount change.discount blur.discount', customerInputSelector);
-    $(document).off('awesomplete-selectcomplete.discount', customerInputSelector);
-    
-    // Use event delegation to handle dynamically loaded elements
-    $(document).on('input.discount change.discount blur.discount', customerInputSelector, function() {
-        let customerInput = $(this);
-        let customerValue = customerInput.val();
-        
-        console.log("Customer input changed:", customerValue);
-        
-        if (customerValue && customerValue.trim() !== '') {
-            // Delay to ensure customer is properly selected
-            setTimeout(() => {
-                handleCustomerSelection(customerValue);
-            }, 1000);
-        } else {
-            // Clear discount if no customer selected
-            clearDiscount();
-            // Clear stored discount info
-            window.currentDiscountInfo = null;
-        }
-    });
-    
-    // Also monitor for awesomplete selection (dropdown selection)
-    $(document).on('awesomplete-selectcomplete.discount', customerInputSelector, function() {
-        let customerValue = $(this).val();
-        console.log("Customer selected via dropdown:", customerValue);
-        
-        if (customerValue && customerValue.trim() !== '') {
-            setTimeout(() => {
-                handleCustomerSelection(customerValue);
-            }, 500);
-        }
-    });
+    // Monitor for changes in the customer-details section only
+    startCustomerDetailsMonitoring();
     
     // Start monitoring net total changes
     startNetTotalMonitoring();
     
-    console.log("POS discount logic initialized");
+    console.log("POS discount logic initialized - focused on customer-details");
+}
+
+function startCustomerDetailsMonitoring() {
+    console.log("Starting customer-details section monitoring");
+    
+    // Use MutationObserver to monitor changes in customer-details section
+    if (typeof MutationObserver !== 'undefined') {
+        
+        // Disconnect any existing observer
+        if (window.customerDetailsObserver) {
+            window.customerDetailsObserver.disconnect();
+        }
+        
+        let observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                // Check for added nodes (customer selected)
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function(node) {
+                        if ($(node).hasClass('customer-display') || $(node).find('.customer-display').length > 0) {
+                            console.log("Customer display added - customer selected");
+                            handleCustomerSelectionFromDetails();
+                        }
+                    });
+                }
+                
+                // Check for changes in existing customer-details
+                if (mutation.type === 'childList' && $(mutation.target).hasClass('customer-details')) {
+                    let customerDisplay = $(mutation.target).find('.customer-display');
+                    if (customerDisplay.length > 0) {
+                        console.log("Customer details changed");
+                        handleCustomerSelectionFromDetails();
+                    }
+                }
+            });
+        });
+        
+        // Start observing the entire POS container for customer-details changes
+        let posContainer = document.querySelector('.pos-wrapper, .pos-container, body');
+        if (posContainer) {
+            observer.observe(posContainer, {
+                childList: true,
+                subtree: true
+            });
+            
+            window.customerDetailsObserver = observer;
+            console.log("Customer details observer started");
+        }
+    }
+    
+    // Also use periodic checking as backup
+    startPeriodicCustomerCheck();
+    
+    // Check for existing customer on load
+    setTimeout(() => {
+        checkExistingCustomer();
+    }, 2000);
+}
+
+function startPeriodicCustomerCheck() {
+    console.log("Starting periodic customer check");
+    
+    // Clear any existing interval
+    if (window.customerCheckInterval) {
+        clearInterval(window.customerCheckInterval);
+    }
+    
+    let lastCustomerName = null;
+    
+    window.customerCheckInterval = setInterval(() => {
+        if (window.location.href.includes('point-of-sale')) {
+            let customerDetails = $('.customer-details');
+            
+            if (customerDetails.length > 0 && customerDetails.is(':visible')) {
+                let customerNameElement = customerDetails.find('.customer-name');
+                let currentCustomerName = customerNameElement.text().trim();
+                
+                // Check if customer name has changed
+                if (currentCustomerName && currentCustomerName !== lastCustomerName) {
+                    console.log("Customer changed via periodic check:", currentCustomerName);
+                    lastCustomerName = currentCustomerName;
+                    
+                    // Apply discount logic
+                    setTimeout(() => {
+                        handleCustomerSelection(currentCustomerName);
+                    }, 500);
+                }
+                
+                // If customer details is hidden/empty, clear last customer
+                if (!currentCustomerName) {
+                    if (lastCustomerName) {
+                        console.log("Customer cleared");
+                        lastCustomerName = null;
+                        clearDiscount();
+                        window.currentDiscountInfo = null;
+                    }
+                }
+            }
+        }
+    }, 1500); // Check every 1.5 seconds
+}
+
+function checkExistingCustomer() {
+    console.log("Checking for existing customer on load");
+    
+    let customerDetails = $('.customer-details');
+    
+    if (customerDetails.length > 0 && customerDetails.is(':visible')) {
+        let customerNameElement = customerDetails.find('.customer-name');
+        let customerName = customerNameElement.text().trim();
+        
+        if (customerName) {
+            console.log("Found existing customer on load:", customerName);
+            handleCustomerSelection(customerName);
+        }
+    }
+}
+
+function handleCustomerSelectionFromDetails() {
+    console.log("Handling customer selection from customer-details section");
+    
+    // Short delay to ensure DOM is updated
+    setTimeout(() => {
+        let customerDetails = $('.customer-details');
+        
+        if (customerDetails.length > 0 && customerDetails.is(':visible')) {
+            let customerNameElement = customerDetails.find('.customer-name');
+            let customerName = customerNameElement.text().trim();
+            
+            if (customerName) {
+                console.log("Customer selected from details:", customerName);
+                handleCustomerSelection(customerName);
+            }
+        }
+    }, 300);
+}
+
+// Monitor for customer removal (reset button click)
+$(document).on('click', '.reset-customer-btn', function() {
+    console.log("Customer reset button clicked");
+    
+    // Clear discount after customer is removed
+    setTimeout(() => {
+        console.log("Clearing discount after customer reset");
+        clearDiscount();
+        window.currentDiscountInfo = null;
+    }, 500);
+});
+
+// Cleanup function
+function cleanupCustomerDetailsMonitoring() {
+    console.log("Cleaning up customer details monitoring");
+    
+    if (window.customerDetailsObserver) {
+        window.customerDetailsObserver.disconnect();
+        window.customerDetailsObserver = null;
+    }
+    
+    if (window.customerCheckInterval) {
+        clearInterval(window.customerCheckInterval);
+        window.customerCheckInterval = null;
+    }
+    
+    window.currentDiscountInfo = null;
 }
 
 function startNetTotalMonitoring() {
